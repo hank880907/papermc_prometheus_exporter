@@ -1,2 +1,34 @@
 metrics-port: 9940
 collection-interval-ticks: 20
+
+server_metrics:
+  enabled: true
+  tps: true
+  mspt: true
+  tick_time: true
+  players: true
+  current_tick: true
+  worlds: true
+
+world_metrics:
+  enabled: true
+  players: true
+  chunks: true
+  entities: true
+  entities_by_category: true
+  tile_entities: true
+  world_time: true
+  weather: true
+
+player_metrics:
+  enabled: true
+  ping: true
+  health: true
+  food: true
+  saturation: true
+  xp: true
+  flying: true
+  gamemode: true
+
+jvm_metrics:
+  enabled: true
