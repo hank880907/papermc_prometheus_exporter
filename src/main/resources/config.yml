@@ -18,7 +18,7 @@ world_metrics:
     players: true
     loaded_chunks: true
     entities: true
-    entities_by_category: true
+    entities_by_type: true
     tile_entities: true
     ticking_tile_entities: true
     time: true

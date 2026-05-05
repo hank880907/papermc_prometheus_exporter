@@ -63,7 +63,7 @@ scrape_configs:
 | `mc_world_players`           | `world`         | Players per world                                        |
 | `mc_loaded_chunks`           | `world`         | Loaded chunks per world                                  |
 | `mc_entities`                | `world`         | Total entity count per world                             |
-| `mc_entities_by_category`    | `world`, `category` | Entity count broken down by category (monsters, animals, water_creatures, ambient, misc) |
+| `mc_entities_by_type`        | `world`, `type` | Entity count broken down by type (e.g. `zombie`, `cow`) per world |
 | `mc_tile_entities`           | `world`         | Tile entity count per world                              |
 | `mc_ticking_tile_entities`   | `world`         | Ticking tile entity count per world                      |
 | `mc_world_time`              | `world`         | In-game clock (0–24000); tracks day/night cycle          |
@@ -107,6 +107,45 @@ To scrape data out of another plugin (EssentialsX, LuckPerms, Vault, ...), add a
 | Single unlabeled value                            | `SimpleGauge`     |
 | One value per subject with one label              | `LabeledGauge<T>` |
 | Multi-label, or label values from a single source | `MultiLabelGauge` |
+
+#### What each one emits
+
+`SimpleGauge` — one row, no labels. A single global fact about the server.
+
+```
+mc_tps_current 19.87
+mc_players_online 4
+```
+
+`LabeledGauge<T>` — one row per subject, single label. Source shape is an `Iterable<T>` plus a label function and a value function. The gauge is cleared each collect so subjects that disappear (logged-off players, unloaded worlds) stop emitting.
+
+```
+mc_player_ping_milliseconds{player="hank"} 42
+mc_player_ping_milliseconds{player="alice"} 78
+
+mc_loaded_chunks{world="world"} 441
+mc_loaded_chunks{world="world_nether"} 132
+```
+
+`MultiLabelGauge` — arbitrary rows, multiple labels. Two shapes fit:
+
+*One source fanned out across label values* — e.g. a `double[]` of TPS windows becoming three rows distinguished by `window`:
+
+```
+mc_tps{window="1m"} 19.87
+mc_tps{window="5m"} 19.92
+mc_tps{window="15m"} 19.95
+```
+
+*Cross-product across multiple dimensions* — e.g. entity counts broken down by `world` × `type`. `LabeledGauge` only supports one label, so anything with ≥2 dimensions goes here:
+
+```
+mc_entities_by_type{world="world",type="zombie"} 87
+mc_entities_by_type{world="world",type="cow"} 23
+mc_entities_by_type{world="world_nether",type="piglin"} 12
+```
+
+Mental model: `SimpleGauge` is one number, `LabeledGauge` is `{subject -> number}`, `MultiLabelGauge` is a table with multiple key columns `{(k1, k2, ...) -> number}`.
 
 ### Example: expose EssentialsX balance as `mc_essentials_balance`
 

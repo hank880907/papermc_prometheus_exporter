@@ -3,16 +3,14 @@ package org.rainbowhunter.prometheusexporter.metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Ambient;
-import org.bukkit.entity.Animals;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.WaterMob;
 import org.rainbowhunter.prometheusexporter.collector.LabeledGauge;
 import org.rainbowhunter.prometheusexporter.collector.MetricCollector;
 import org.rainbowhunter.prometheusexporter.collector.MultiLabelGauge;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.ToDoubleFunction;
 
 public class WorldMetrics extends MetricGroup {
@@ -34,24 +32,16 @@ public class WorldMetrics extends MetricGroup {
             world("storm",                 "1 if a storm is active, 0 otherwise",             w -> w.hasStorm() ? 1 : 0),
             world("thundering",            "1 if a thunderstorm is active, 0 otherwise",      w -> w.isThundering() ? 1 : 0),
 
-            new MultiLabelGauge("entities_by_category", prefix + "world_entities_by_category",
-                    "Entity count broken down by category per world",
-                    List.of("world", "category"), g -> {
+            new MultiLabelGauge("entities_by_type", prefix + "world_entities_by_type",
+                    "Entity count broken down by type per world",
+                    List.of("world", "type"), g -> {
                 for (World world : Bukkit.getWorlds()) {
-                    int monsters = 0, animals = 0, waterCreatures = 0, ambient = 0, misc = 0;
+                    Map<String, Integer> counts = new HashMap<>();
                     for (Entity entity : world.getEntities()) {
-                        if      (entity instanceof Monster)  monsters++;
-                        else if (entity instanceof Animals)  animals++;
-                        else if (entity instanceof WaterMob) waterCreatures++;
-                        else if (entity instanceof Ambient)  ambient++;
-                        else                                 misc++;
+                        counts.merge(entity.getType().getKey().getKey(), 1, Integer::sum);
                     }
                     String name = world.getName();
-                    g.labelValues(name, "monsters").set(monsters);
-                    g.labelValues(name, "animals").set(animals);
-                    g.labelValues(name, "water_creatures").set(waterCreatures);
-                    g.labelValues(name, "ambient").set(ambient);
-                    g.labelValues(name, "misc").set(misc);
+                    counts.forEach((type, count) -> g.labelValues(name, type).set(count));
                 }
             })
         );
