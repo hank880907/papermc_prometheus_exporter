@@ -35,27 +35,21 @@ public class PrometheusExporterPlugin extends JavaPlugin {
             getLogger().severe("Failed to start metrics HTTP server: " + e.getMessage());
         }
 
-        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
-        collectionTask = getServer().getScheduler().runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
+        startCollectionTask();
 
         new PECommands(this, this::reload).register();
     }
 
     @Override
     public void onDisable() {
-        if (collectionTask != null) {
-            collectionTask.cancel();
-        }
+        stopCollectionTask();
         if (httpServer != null) {
             httpServer.stop();
         }
     }
 
     private void reload() {
-        if (collectionTask != null) {
-            collectionTask.cancel();
-            collectionTask = null;
-        }
+        stopCollectionTask();
         groups.forEach(MetricGroup::unregister);
 
         if (httpServer != null) httpServer.stop();
@@ -70,9 +64,21 @@ public class PrometheusExporterPlugin extends JavaPlugin {
         // JvmMetrics has no clean unregister path; toggling jvm_metrics.enabled requires a full server restart.
         buildGroups();
         groups.forEach(MetricGroup::register);
-        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
-        collectionTask = getServer().getScheduler().runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
+        startCollectionTask();
         getLogger().info("Configuration reloaded");
+    }
+
+    private void startCollectionTask() {
+        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
+        collectionTask = getServer().getScheduler()
+                .runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
+    }
+
+    private void stopCollectionTask() {
+        if (collectionTask != null) {
+            collectionTask.cancel();
+            collectionTask = null;
+        }
     }
 
     private void buildGroups() {
