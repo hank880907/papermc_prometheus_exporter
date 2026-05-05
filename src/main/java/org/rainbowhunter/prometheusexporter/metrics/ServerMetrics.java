@@ -107,10 +107,12 @@ public class ServerMetrics implements MetricGroup {
         }
         if (tickTimeMaxGauge != null || tickTimeP95Gauge != null) {
             long[] tickTimes = Bukkit.getTickTimes();
-            long[] sorted = Arrays.copyOf(tickTimes, tickTimes.length);
-            Arrays.sort(sorted);
-            if (tickTimeMaxGauge != null) tickTimeMaxGauge.set(sorted[sorted.length - 1] / 1_000_000.0);
-            if (tickTimeP95Gauge != null) tickTimeP95Gauge.set(sorted[(int) (0.95 * (sorted.length - 1))] / 1_000_000.0);
+            if (tickTimes.length > 0) {
+                long[] sorted = Arrays.copyOf(tickTimes, tickTimes.length);
+                Arrays.sort(sorted);
+                if (tickTimeMaxGauge != null) tickTimeMaxGauge.set(sorted[sorted.length - 1] / 1_000_000.0);
+                if (tickTimeP95Gauge != null) tickTimeP95Gauge.set(sorted[(int) (0.95 * (sorted.length - 1))] / 1_000_000.0);
+            }
         }
         if (playersOnlineGauge != null) playersOnlineGauge.set(Bukkit.getOnlinePlayers().size());
         if (playersMaxGauge    != null) playersMaxGauge.set(Bukkit.getMaxPlayers());
