@@ -4,6 +4,8 @@ import io.prometheus.metrics.core.metrics.Gauge;
 import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -133,7 +135,10 @@ public class PlayerMetrics implements MetricGroup {
             String name = player.getName();
             if (playerPingGauge            != null) playerPingGauge.labelValues(name).set(player.getPing());
             if (playerHealthGauge          != null) playerHealthGauge.labelValues(name).set(player.getHealth());
-            if (playerMaxHealthGauge       != null) playerMaxHealthGauge.labelValues(name).set(player.getMaxHealth());
+            if (playerMaxHealthGauge != null) {
+                AttributeInstance maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
+                if (maxHealth != null) playerMaxHealthGauge.labelValues(name).set(maxHealth.getValue());
+            }
             if (playerFoodLevelGauge       != null) playerFoodLevelGauge.labelValues(name).set(player.getFoodLevel());
             if (playerSaturationGauge      != null) playerSaturationGauge.labelValues(name).set(player.getSaturation());
             if (playerXpLevelGauge         != null) playerXpLevelGauge.labelValues(name).set(player.getLevel());
