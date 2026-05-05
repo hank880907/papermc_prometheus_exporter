@@ -98,6 +98,15 @@ scrape_configs:
 ./gradlew clean build  # clean rebuild
 ```
 
+## Testing
+
+```bash
+./gradlew test             # unit tests (~1s, no Paper dependency)
+./gradlew integrationTest  # boots a real Paper server, scrapes /metrics (~25s)
+```
+
+`integrationTest` downloads Paper 26.1.2 (~50 MB) to `build/paper-cache/` on first run and reuses it afterward. CI (`.github/workflows/ci.yml`) runs both on every push and pull request — unit tests gate, integration is advisory.
+
 ## Exposing metrics from other plugins
 
 To scrape data out of another plugin (EssentialsX, LuckPerms, Vault, ...), add a new `MetricGroup` that talks to that plugin's API. Pick a collector kind that matches the value's shape:
