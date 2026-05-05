@@ -16,9 +16,16 @@ public abstract class MetricGroup {
 
     protected final FileConfiguration cfg;
     private final List<MetricCollector> active = new ArrayList<>();
+    protected final String prefix;
+
+    protected MetricGroup(FileConfiguration cfg, String prefix) {
+        this.cfg = cfg;
+        this.prefix = prefix;
+    }
 
     protected MetricGroup(FileConfiguration cfg) {
         this.cfg = cfg;
+        this.prefix = "mc_";
     }
 
     protected abstract String configRoot();

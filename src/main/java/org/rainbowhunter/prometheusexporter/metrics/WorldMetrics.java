@@ -25,16 +25,16 @@ public class WorldMetrics extends MetricGroup {
 
     @Override protected List<MetricCollector> metrics() {
         return List.of(
-            world("players",              "mc_world_players",         "Number of players per world",                  World::getPlayerCount),
-            world("loaded_chunks",        "mc_loaded_chunks",         "Number of loaded chunks per world",            World::getChunkCount),
-            world("entities",             "mc_entities",              "Total entity count per world",                 World::getEntityCount),
-            world("tile_entities",        "mc_tile_entities",         "Number of tile entities per world",            World::getTileEntityCount),
-            world("ticking_tile_entities","mc_ticking_tile_entities", "Number of ticking tile entities per world",    World::getTickableTileEntityCount),
-            world("time",                 "mc_world_time",            "In-game clock (0-24000); tracks day/night cycle", World::getTime),
-            world("storm",                "mc_world_storm",           "1 if a storm is active, 0 otherwise",          w -> w.hasStorm() ? 1 : 0),
-            world("thundering",           "mc_world_thundering",      "1 if a thunderstorm is active, 0 otherwise",   w -> w.isThundering() ? 1 : 0),
+            world("players",               "Number of players per world",                     World::getPlayerCount),
+            world("loaded_chunks",         "Number of loaded chunks per world",               World::getChunkCount),
+            world("entities",              "Total entity count per world",                    World::getEntityCount),
+            world("tile_entities",         "Number of tile entities per world",               World::getTileEntityCount),
+            world("ticking_tile_entities", "Number of ticking tile entities per world",       World::getTickableTileEntityCount),
+            world("time",                  "In-game clock (0-24000); tracks day/night cycle", World::getTime),
+            world("storm",                 "1 if a storm is active, 0 otherwise",             w -> w.hasStorm() ? 1 : 0),
+            world("thundering",            "1 if a thunderstorm is active, 0 otherwise",      w -> w.isThundering() ? 1 : 0),
 
-            new MultiLabelGauge("entities_by_category", "mc_entities_by_category",
+            new MultiLabelGauge("entities_by_category", prefix + "world_entities_by_category",
                     "Entity count broken down by category per world",
                     List.of("world", "category"), g -> {
                 for (World world : Bukkit.getWorlds()) {
@@ -57,8 +57,8 @@ public class WorldMetrics extends MetricGroup {
         );
     }
 
-    private static MetricCollector world(String configKey, String name, String help, ToDoubleFunction<World> fn) {
-        return new LabeledGauge<>(configKey, name, help, "world",
+    private MetricCollector world(String metric, String help, ToDoubleFunction<World> fn) {
+        return new LabeledGauge<>(metric, prefix + "world_" + metric, help, "world",
                 Bukkit::getWorlds, World::getName, fn);
     }
 }

@@ -1,5 +1,6 @@
 package org.rainbowhunter.prometheusexporter.metrics;
 
+import io.prometheus.metrics.core.metrics.Gauge;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.rainbowhunter.prometheusexporter.collector.MetricCollector;
@@ -8,6 +9,7 @@ import org.rainbowhunter.prometheusexporter.collector.SimpleGauge;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ServerMetrics extends MetricGroup {
 
@@ -19,45 +21,34 @@ public class ServerMetrics extends MetricGroup {
 
     @Override protected List<MetricCollector> metrics() {
         return List.of(
-            new SimpleGauge("mspt_milliseconds", "mc_mspt_milliseconds",
-                    "Average milliseconds per server tick (last 100 ticks)",
-                    g -> g.set(Bukkit.getAverageTickTime())),
-
-            new SimpleGauge("players_online", "mc_players_online",
-                    "Number of players currently online",
-                    g -> g.set(Bukkit.getOnlinePlayers().size())),
-
-            new SimpleGauge("players_max", "mc_players_max",
-                    "Maximum player slots",
-                    g -> g.set(Bukkit.getMaxPlayers())),
-
-            new SimpleGauge("current_tick", "mc_current_tick",
-                    "Current server tick number",
-                    g -> g.set(Bukkit.getCurrentTick())),
-
-            new SimpleGauge("worlds", "mc_worlds",
-                    "Number of currently loaded worlds",
-                    g -> g.set(Bukkit.getWorlds().size())),
-
-            new MultiLabelGauge("tps", "mc_tps", "Server TPS", List.of("window"), g -> {
+            simple("mspt_milliseconds",       "Average milliseconds per server tick (last 100 ticks)",          g -> g.set(Bukkit.getAverageTickTime())),
+            simple("players_online",           "Number of players currently online",                             g -> g.set(Bukkit.getOnlinePlayers().size())),
+            simple("players_max",              "Maximum player slots",                                           g -> g.set(Bukkit.getMaxPlayers())),
+            simple("current_tick",             "Current server tick number",                                     g -> g.set(Bukkit.getCurrentTick())),
+            simple("worlds",                   "Number of currently loaded worlds",                              g -> g.set(Bukkit.getWorlds().size())),
+            multi("tps", "Server TPS", List.of("window"), g -> {
                 double[] tps = Bukkit.getTPS();
                 g.labelValues("1m").set(tps[0]);
                 g.labelValues("5m").set(tps[1]);
                 g.labelValues("15m").set(tps[2]);
             }),
-
-            new SimpleGauge("tick_time_max_milliseconds", "mc_tick_time_max_milliseconds",
-                    "Max tick duration among the last 100 ticks", g -> {
+            simple("tick_time_max_milliseconds", "Max tick duration among the last 100 ticks", g -> {
                 long[] sorted = sortedTickTimes();
                 if (sorted != null) g.set(sorted[sorted.length - 1] / 1_000_000.0);
             }),
-
-            new SimpleGauge("tick_time_p95_milliseconds", "mc_tick_time_p95_milliseconds",
-                    "95th-percentile tick duration among the last 100 ticks", g -> {
+            simple("tick_time_p95_milliseconds", "95th-percentile tick duration among the last 100 ticks", g -> {
                 long[] sorted = sortedTickTimes();
                 if (sorted != null) g.set(sorted[(int) (0.95 * (sorted.length - 1))] / 1_000_000.0);
             })
         );
+    }
+
+    private MetricCollector simple(String metric, String help, Consumer<Gauge> collect) {
+        return new SimpleGauge(metric, prefix + metric, help, collect);
+    }
+
+    private MetricCollector multi(String metric, String help, List<String> labels, Consumer<Gauge> collect) {
+        return new MultiLabelGauge(metric, prefix + metric, help, labels, collect);
     }
 
     private static long[] sortedTickTimes() {

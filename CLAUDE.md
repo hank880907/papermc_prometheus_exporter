@@ -8,6 +8,7 @@ Java Prometheus metrics exporter plugin for PaperMC 26.1.2. Gradle (Kotlin DSL),
 - Package: `org.rainbowhunter.prometheusexporter`
 - Include per-player metrics (ping, health, gamemode, XP level) — high cardinality is acceptable.
 - Include JVM metrics (`JvmMetrics.builder().register()` — heap, GC, threads, classloader).
+- Changing the http server interface will require a full server restart.
 
 ## Build
 
