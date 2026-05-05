@@ -6,8 +6,7 @@ server_metrics:
   metrics:
     mspt_milliseconds: true
     tps: true
-    tick_time_max_milliseconds: true
-    tick_time_p95_milliseconds: true
+    tick_time_milliseconds: true
     players_online: true
     players_max: true
     current_tick: true

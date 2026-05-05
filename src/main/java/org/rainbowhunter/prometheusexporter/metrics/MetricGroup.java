@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class MetricGroup {
 
     protected final FileConfiguration cfg;
-    private final List<MetricCollector> active = new ArrayList<>();
+    private final List<MetricCollector> collectors = new ArrayList<>();
     protected final String prefix;
 
     protected MetricGroup(FileConfiguration cfg, String prefix) {
@@ -36,16 +36,16 @@ public abstract class MetricGroup {
         if (!cfg.getBoolean(configRoot() + ".enabled", true)) return;
         for (MetricCollector m : metrics()) {
             m.register(cfg, configRoot());
-            active.add(m);
+            collectors.add(m);
         }
     }
 
     public final void unregister() {
-        active.forEach(MetricCollector::unregister);
-        active.clear();
+        collectors.forEach(MetricCollector::unregister);
+        collectors.clear();
     }
 
     public final void collect() {
-        active.forEach(MetricCollector::collect);
+        collectors.forEach(MetricCollector::collect);
     }
 }

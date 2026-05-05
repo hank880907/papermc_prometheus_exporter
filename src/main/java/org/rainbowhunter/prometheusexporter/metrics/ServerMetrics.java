@@ -32,13 +32,11 @@ public class ServerMetrics extends MetricGroup {
                 g.labelValues("5m").set(tps[1]);
                 g.labelValues("15m").set(tps[2]);
             }),
-            simple("tick_time_max_milliseconds", "Max tick duration among the last 100 ticks", g -> {
+            multi("tick_time_milliseconds", "Tick duration quantiles over the last 100 ticks", List.of("quantile"), g -> {
                 long[] sorted = sortedTickTimes();
-                if (sorted != null) g.set(sorted[sorted.length - 1] / 1_000_000.0);
-            }),
-            simple("tick_time_p95_milliseconds", "95th-percentile tick duration among the last 100 ticks", g -> {
-                long[] sorted = sortedTickTimes();
-                if (sorted != null) g.set(sorted[(int) (0.95 * (sorted.length - 1))] / 1_000_000.0);
+                if (sorted == null) return;
+                g.labelValues("max").set(sorted[sorted.length - 1] / 1_000_000.0);
+                g.labelValues("p95").set(sorted[(int) (0.95 * (sorted.length - 1))] / 1_000_000.0);
             })
         );
     }
