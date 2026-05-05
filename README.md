@@ -97,3 +97,72 @@ scrape_configs:
 ./gradlew build        # produces build/libs/prometheus-exporter-1.0.0.jar
 ./gradlew clean build  # clean rebuild
 ```
+
+## Exposing metrics from other plugins
+
+To scrape data out of another plugin (EssentialsX, LuckPerms, Vault, ...), add a new `MetricGroup` that talks to that plugin's API. Pick a collector kind that matches the value's shape:
+
+| Shape                                             | Class             |
+| ------------------------------------------------- | ----------------- |
+| Single unlabeled value                            | `SimpleGauge`     |
+| One value per subject with one label              | `LabeledGauge<T>` |
+| Multi-label, or label values from a single source | `MultiLabelGauge` |
+
+### Example: expose EssentialsX balance as `mc_essentials_balance`
+
+1. Soft-depend on the plugin in `src/main/resources/paper-plugin.yml` so PE still loads on servers without it:
+
+   ```yaml
+   dependencies:
+     server:
+       Essentials:
+         load: BEFORE
+         required: false
+         join-classpath: true
+   ```
+
+2. Add the API as a `compileOnly` dependency in `build.gradle.kts` so you can call it at compile time without bundling it.
+
+3. Subclass `MetricGroup`. Look the plugin up once at construction; if it's missing, return an empty `metrics()` so the group registers nothing:
+
+   ```
+   public class EssentialsMetrics extends MetricGroup {
+       private final Essentials essentials;
+
+       public EssentialsMetrics(FileConfiguration cfg) {
+           super(cfg);
+           Plugin p = Bukkit.getPluginManager().getPlugin("Essentials");
+           this.essentials = (p instanceof Essentials e) ? e : null;
+       }
+
+       @Override protected String configRoot() { return "essentials_metrics"; }
+
+       @Override protected List<MetricCollector> metrics() {
+           if (essentials == null) return List.of();
+           return List.of(
+               new LabeledGauge<>(
+                   "balance", "mc_essentials_balance", "Player economy balance", "player",
+                   Bukkit::getOnlinePlayers, Player::getName,
+                   p -> essentials.getUser(p).getMoney().doubleValue()
+               )
+           );
+       }
+   }
+   ```
+
+4. Register the group in `PrometheusExporterPlugin.buildGroups()`:
+
+   ```
+   groups.add(new EssentialsMetrics(cfg));
+   ```
+
+5. Add the stanza to `src/main/resources/config.yml`:
+
+   ```yaml
+   essentials_metrics:
+     enabled: true
+     metrics:
+       balance: true
+   ```
+
+**Config-key convention:** strip the `mc_` prefix, then strip the group-singular prefix if present. `mc_essentials_balance` → `balance`; `mc_luckperms_group_size` → `group_size`. Each collector declares its key explicitly — the convention is for the author, not auto-derivation.

@@ -19,7 +19,7 @@ public class PrometheusExporterPlugin extends JavaPlugin {
 
     private HTTPServer httpServer;
     private BukkitTask collectionTask;
-    private List<MetricGroup<?>> groups = new ArrayList<>();
+    private List<MetricGroup> groups = new ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -91,6 +91,6 @@ public class PrometheusExporterPlugin extends JavaPlugin {
     }
 
     private void collectMetrics() {
-        for (MetricGroup<?> g : groups) g.collect();
+        for (MetricGroup g : groups) g.collect();
     }
 }

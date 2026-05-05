@@ -4,10 +4,12 @@ collection-interval-ticks: 20
 server_metrics:
   enabled: true
   metrics:
+    mspt_milliseconds: true
     tps: true
-    mspt: true
-    tick_time: true
-    players: true
+    tick_time_max_milliseconds: true
+    tick_time_p95_milliseconds: true
+    players_online: true
+    players_max: true
     current_tick: true
     worlds: true
 
@@ -15,21 +17,26 @@ world_metrics:
   enabled: true
   metrics:
     players: true
-    chunks: true
+    loaded_chunks: true
     entities: true
     entities_by_category: true
     tile_entities: true
-    world_time: true
-    weather: true
+    ticking_tile_entities: true
+    time: true
+    storm: true
+    thundering: true
 
 player_metrics:
   enabled: true
   metrics:
-    ping: true
+    ping_milliseconds: true
     health: true
-    food: true
+    max_health: true
+    food_level: true
     saturation: true
-    xp: true
+    xp_level: true
+    xp_progress: true
+    total_experience: true
     flying: true
     gamemode: true
 
