@@ -1,4 +1,5 @@
 {
+  "plansDirectory": "./plans",
   "enabledPlugins": {
     "jdtls-lsp@claude-plugins-official": true
   },
@@ -15,7 +16,9 @@
       "Bash(git diff *)",
       "Bash(git log *)",
       "Bash(ls *)",
-      "Bash(cat *)"
+      "Bash(cat *)",
+      "mcp__plugin_context7_context7__query-docs",
+      "mcp__plugin_context7_context7__resolve-library-id"
     ],
     "deny": [
       "Bash(git push *)"

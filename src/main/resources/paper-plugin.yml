@@ -3,3 +3,7 @@ version: "1.0.0"
 main: org.rainbowhunter.prometheusexporter.PrometheusExporterPlugin
 description: Exports Paper server metrics to Prometheus
 api-version: "26.1.2"
+permissions:
+  prometheusexporter.reload:
+    description: Allows reloading Prometheus Exporter configuration
+    default: op

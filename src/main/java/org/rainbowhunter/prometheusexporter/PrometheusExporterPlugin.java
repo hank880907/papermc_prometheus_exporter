@@ -1,8 +1,10 @@
 package org.rainbowhunter.prometheusexporter;
 
 import io.prometheus.metrics.core.metrics.Gauge;
+import org.rainbowhunter.prometheusexporter.commands.PECommands;
 import io.prometheus.metrics.exporter.httpserver.HTTPServer;
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
+import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -82,6 +84,84 @@ public class PrometheusExporterPlugin extends JavaPlugin {
             JvmMetrics.builder().register();
         }
 
+        registerGauges();
+
+        int port = getConfig().getInt("metrics-port", 9940);
+        try {
+            httpServer = HTTPServer.builder().port(port).buildAndStart();
+            getLogger().info("Prometheus metrics available on port " + port);
+        } catch (IOException e) {
+            getLogger().severe("Failed to start metrics HTTP server: " + e.getMessage());
+        }
+
+        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
+        collectionTask = getServer().getScheduler().runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
+
+        new PECommands(this, this::reload).register();
+    }
+
+    @Override
+    public void onDisable() {
+        if (collectionTask != null) {
+            collectionTask.cancel();
+        }
+        if (httpServer != null) {
+            httpServer.stop();
+        }
+    }
+
+    private void reload() {
+        if (collectionTask != null) {
+            collectionTask.cancel();
+            collectionTask = null;
+        }
+        unregisterGauges();
+        reloadConfig();
+        loadConfigFlags();
+        registerGauges();
+        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
+        collectionTask = getServer().getScheduler().runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
+        getLogger().info("Configuration reloaded");
+    }
+
+    private Gauge clear(Gauge g) {
+        if (g != null) PrometheusRegistry.defaultRegistry.unregister(g);
+        return null;
+    }
+
+    private void unregisterGauges() {
+        tpsGauge                   = clear(tpsGauge);
+        msptGauge                  = clear(msptGauge);
+        tickTimeMaxGauge           = clear(tickTimeMaxGauge);
+        tickTimeP95Gauge           = clear(tickTimeP95Gauge);
+        playersOnlineGauge         = clear(playersOnlineGauge);
+        playersMaxGauge            = clear(playersMaxGauge);
+        currentTickGauge           = clear(currentTickGauge);
+        worldsGauge                = clear(worldsGauge);
+
+        worldPlayersGauge          = clear(worldPlayersGauge);
+        loadedChunksGauge          = clear(loadedChunksGauge);
+        entitiesGauge              = clear(entitiesGauge);
+        entitiesByCategoryGauge    = clear(entitiesByCategoryGauge);
+        tileEntitiesGauge          = clear(tileEntitiesGauge);
+        tickingTileEntitiesGauge   = clear(tickingTileEntitiesGauge);
+        worldTimeGauge             = clear(worldTimeGauge);
+        worldStormGauge            = clear(worldStormGauge);
+        worldThunderingGauge       = clear(worldThunderingGauge);
+
+        playerPingGauge            = clear(playerPingGauge);
+        playerHealthGauge          = clear(playerHealthGauge);
+        playerMaxHealthGauge       = clear(playerMaxHealthGauge);
+        playerFoodLevelGauge       = clear(playerFoodLevelGauge);
+        playerSaturationGauge      = clear(playerSaturationGauge);
+        playerXpLevelGauge         = clear(playerXpLevelGauge);
+        playerXpProgressGauge      = clear(playerXpProgressGauge);
+        playerTotalExperienceGauge = clear(playerTotalExperienceGauge);
+        playerFlyingGauge          = clear(playerFlyingGauge);
+        playerGamemodeGauge        = clear(playerGamemodeGauge);
+    }
+
+    private void registerGauges() {
         if (cfgServerEnabled && cfgServerTps) {
             tpsGauge = Gauge.builder()
                     .name("mc_tps")
@@ -251,27 +331,6 @@ public class PrometheusExporterPlugin extends JavaPlugin {
                     .help("Player active gamemode (1 = active, 0 = inactive)")
                     .labelNames("player", "gamemode")
                     .register();
-        }
-
-        int port = getConfig().getInt("metrics-port", 9940);
-        try {
-            httpServer = HTTPServer.builder().port(port).buildAndStart();
-            getLogger().info("Prometheus metrics available on port " + port);
-        } catch (IOException e) {
-            getLogger().severe("Failed to start metrics HTTP server: " + e.getMessage());
-        }
-
-        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
-        collectionTask = getServer().getScheduler().runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
-    }
-
-    @Override
-    public void onDisable() {
-        if (collectionTask != null) {
-            collectionTask.cancel();
-        }
-        if (httpServer != null) {
-            httpServer.stop();
         }
     }
 
