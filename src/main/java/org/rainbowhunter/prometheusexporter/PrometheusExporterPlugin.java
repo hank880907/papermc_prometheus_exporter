@@ -57,7 +57,17 @@ public class PrometheusExporterPlugin extends JavaPlugin {
             collectionTask = null;
         }
         groups.forEach(MetricGroup::unregister);
+
+        if (httpServer != null) httpServer.stop();
         reloadConfig();
+        int port = getConfig().getInt("metrics-port", 9940);
+        try {
+            httpServer = HTTPServer.builder().port(port).buildAndStart();
+        } catch (IOException e) {
+            getLogger().severe("Failed to restart metrics HTTP server: " + e.getMessage());
+        }
+
+        // JvmMetrics has no clean unregister path; toggling jvm_metrics.enabled requires a full server restart.
         buildGroups();
         groups.forEach(MetricGroup::register);
         long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);

@@ -25,7 +25,7 @@ public class PECommands {
                                         reloadAction.run();
                                         ctx.getSource().getSender().sendRichMessage(
                                                 "<green>Prometheus Exporter config reloaded "
-                                                        + "<gray>(metrics-port and jvm_metrics require full restart)");
+                                                        + "<gray>(jvm_metrics changes require full restart)");
                                         return Command.SINGLE_SUCCESS;
                                     }))
                             .build(),
