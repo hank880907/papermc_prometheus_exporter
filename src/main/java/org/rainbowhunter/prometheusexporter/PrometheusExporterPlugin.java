@@ -5,7 +5,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.rainbowhunter.prometheusexporter.commands.PECommands;
-import org.rainbowhunter.prometheusexporter.metrics.JvmMetricsGroup;
+import org.rainbowhunter.prometheusexporter.metrics.JvmMetrics;
 import org.rainbowhunter.prometheusexporter.metrics.MetricGroup;
 import org.rainbowhunter.prometheusexporter.metrics.PlayerMetrics;
 import org.rainbowhunter.prometheusexporter.metrics.ServerMetrics;
@@ -87,7 +87,7 @@ public class PrometheusExporterPlugin extends JavaPlugin {
         groups.add(new ServerMetrics(cfg));
         groups.add(new WorldMetrics(cfg));
         groups.add(new PlayerMetrics(cfg));
-        groups.add(new JvmMetricsGroup(cfg));
+        groups.add(new JvmMetrics(cfg));
     }
 
     private void collectMetrics() {
