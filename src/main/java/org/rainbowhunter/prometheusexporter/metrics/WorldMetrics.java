@@ -11,9 +11,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.WaterMob;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class WorldMetrics implements MetricGroup {
 
     private final boolean enabled;
@@ -126,6 +123,16 @@ public class WorldMetrics implements MetricGroup {
                 && tickingTileEntitiesGauge == null && worldTimeGauge == null
                 && worldStormGauge == null && worldThunderingGauge == null) return;
 
+        if (worldPlayersGauge        != null) worldPlayersGauge.clear();
+        if (loadedChunksGauge        != null) loadedChunksGauge.clear();
+        if (entitiesGauge            != null) entitiesGauge.clear();
+        if (entitiesByCategoryGauge  != null) entitiesByCategoryGauge.clear();
+        if (tileEntitiesGauge        != null) tileEntitiesGauge.clear();
+        if (tickingTileEntitiesGauge != null) tickingTileEntitiesGauge.clear();
+        if (worldTimeGauge           != null) worldTimeGauge.clear();
+        if (worldStormGauge          != null) worldStormGauge.clear();
+        if (worldThunderingGauge     != null) worldThunderingGauge.clear();
+
         for (World world : Bukkit.getWorlds()) {
             String name = world.getName();
             if (worldPlayersGauge        != null) worldPlayersGauge.labelValues(name).set(world.getPlayerCount());
@@ -138,24 +145,19 @@ public class WorldMetrics implements MetricGroup {
             if (worldThunderingGauge     != null) worldThunderingGauge.labelValues(name).set(world.isThundering() ? 1 : 0);
 
             if (entitiesByCategoryGauge != null) {
-                Map<String, Integer> cats = new HashMap<>();
-                cats.put("monsters", 0);
-                cats.put("animals", 0);
-                cats.put("water_creatures", 0);
-                cats.put("ambient", 0);
-                cats.put("misc", 0);
+                int monsters = 0, animals = 0, waterCreatures = 0, ambient = 0, misc = 0;
                 for (Entity entity : world.getEntities()) {
-                    String cat;
-                    if      (entity instanceof Monster)  cat = "monsters";
-                    else if (entity instanceof Animals)  cat = "animals";
-                    else if (entity instanceof WaterMob) cat = "water_creatures";
-                    else if (entity instanceof Ambient)  cat = "ambient";
-                    else                                 cat = "misc";
-                    cats.merge(cat, 1, Integer::sum);
+                    if      (entity instanceof Monster)  monsters++;
+                    else if (entity instanceof Animals)  animals++;
+                    else if (entity instanceof WaterMob) waterCreatures++;
+                    else if (entity instanceof Ambient)  ambient++;
+                    else                                 misc++;
                 }
-                for (Map.Entry<String, Integer> entry : cats.entrySet()) {
-                    entitiesByCategoryGauge.labelValues(name, entry.getKey()).set(entry.getValue());
-                }
+                entitiesByCategoryGauge.labelValues(name, "monsters").set(monsters);
+                entitiesByCategoryGauge.labelValues(name, "animals").set(animals);
+                entitiesByCategoryGauge.labelValues(name, "water_creatures").set(waterCreatures);
+                entitiesByCategoryGauge.labelValues(name, "ambient").set(ambient);
+                entitiesByCategoryGauge.labelValues(name, "misc").set(misc);
             }
         }
     }

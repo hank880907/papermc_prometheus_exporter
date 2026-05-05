@@ -131,6 +131,17 @@ public class PlayerMetrics implements MetricGroup {
                 && playerTotalExperienceGauge == null && playerFlyingGauge == null
                 && playerGamemodeGauge == null) return;
 
+        if (playerPingGauge            != null) playerPingGauge.clear();
+        if (playerHealthGauge          != null) playerHealthGauge.clear();
+        if (playerMaxHealthGauge       != null) playerMaxHealthGauge.clear();
+        if (playerFoodLevelGauge       != null) playerFoodLevelGauge.clear();
+        if (playerSaturationGauge      != null) playerSaturationGauge.clear();
+        if (playerXpLevelGauge         != null) playerXpLevelGauge.clear();
+        if (playerXpProgressGauge      != null) playerXpProgressGauge.clear();
+        if (playerTotalExperienceGauge != null) playerTotalExperienceGauge.clear();
+        if (playerFlyingGauge          != null) playerFlyingGauge.clear();
+        if (playerGamemodeGauge        != null) playerGamemodeGauge.clear();
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             String name = player.getName();
             if (playerPingGauge            != null) playerPingGauge.labelValues(name).set(player.getPing());
