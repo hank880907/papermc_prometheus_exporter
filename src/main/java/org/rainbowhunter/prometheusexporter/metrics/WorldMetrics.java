@@ -1,7 +1,5 @@
 package org.rainbowhunter.prometheusexporter.metrics;
 
-import io.prometheus.metrics.core.metrics.Gauge;
-import io.prometheus.metrics.model.registry.PrometheusRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -11,140 +9,26 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.WaterMob;
 
-public class WorldMetrics implements MetricGroup {
+import java.util.List;
 
-    private final boolean enabled;
-    private final boolean cfgPlayers, cfgChunks, cfgEntities, cfgEntitiesByCategory,
-                          cfgTileEntities, cfgWorldTime, cfgWeather;
+public class WorldMetrics extends MetricGroup<World> {
 
-    private Gauge worldPlayersGauge;
-    private Gauge loadedChunksGauge;
-    private Gauge entitiesGauge;
-    private Gauge entitiesByCategoryGauge;
-    private Gauge tileEntitiesGauge;
-    private Gauge tickingTileEntitiesGauge;
-    private Gauge worldTimeGauge;
-    private Gauge worldStormGauge;
-    private Gauge worldThunderingGauge;
+    private static final List<Desc<World>> DESCRIPTIONS = List.of(
+        new Desc<>("players",        "mc_world_players",         "Number of players per world",            World::getPlayerCount),
+        new Desc<>("chunks",         "mc_loaded_chunks",         "Number of loaded chunks per world",      World::getChunkCount),
+        new Desc<>("entities",       "mc_entities",              "Total entity count per world",           World::getEntityCount),
+        new Desc<>("tile_entities",  "mc_tile_entities",         "Number of tile entities per world",      World::getTileEntityCount),
+        new Desc<>("tile_entities",  "mc_ticking_tile_entities", "Number of ticking tile entities per world", World::getTickableTileEntityCount),
+        new Desc<>("world_time",     "mc_world_time",            "In-game clock (0-24000); tracks day/night cycle", World::getTime),
+        new Desc<>("weather",        "mc_world_storm",           "1 if a storm is active, 0 otherwise",    w -> w.hasStorm() ? 1 : 0),
+        new Desc<>("weather",        "mc_world_thundering",      "1 if a thunderstorm is active, 0 otherwise", w -> w.isThundering() ? 1 : 0)
+    );
 
-    public WorldMetrics(FileConfiguration cfg) {
-        enabled                = cfg.getBoolean("world_metrics.enabled",              true);
-        cfgPlayers             = cfg.getBoolean("world_metrics.players",              true);
-        cfgChunks              = cfg.getBoolean("world_metrics.chunks",               true);
-        cfgEntities            = cfg.getBoolean("world_metrics.entities",             true);
-        cfgEntitiesByCategory  = cfg.getBoolean("world_metrics.entities_by_category", true);
-        cfgTileEntities        = cfg.getBoolean("world_metrics.tile_entities",        true);
-        cfgWorldTime           = cfg.getBoolean("world_metrics.world_time",           true);
-        cfgWeather             = cfg.getBoolean("world_metrics.weather",              true);
-    }
-
-    @Override
-    public void register() {
-        if (!enabled) return;
-
-        if (cfgPlayers) {
-            worldPlayersGauge = Gauge.builder()
-                    .name("mc_world_players")
-                    .help("Number of players per world")
-                    .labelNames("world")
-                    .register();
-        }
-        if (cfgChunks) {
-            loadedChunksGauge = Gauge.builder()
-                    .name("mc_loaded_chunks")
-                    .help("Number of loaded chunks per world")
-                    .labelNames("world")
-                    .register();
-        }
-        if (cfgEntities) {
-            entitiesGauge = Gauge.builder()
-                    .name("mc_entities")
-                    .help("Total entity count per world")
-                    .labelNames("world")
-                    .register();
-        }
-        if (cfgEntitiesByCategory) {
-            entitiesByCategoryGauge = Gauge.builder()
-                    .name("mc_entities_by_category")
-                    .help("Entity count broken down by category per world")
-                    .labelNames("world", "category")
-                    .register();
-        }
-        if (cfgTileEntities) {
-            tileEntitiesGauge = Gauge.builder()
-                    .name("mc_tile_entities")
-                    .help("Number of tile entities per world")
-                    .labelNames("world")
-                    .register();
-            tickingTileEntitiesGauge = Gauge.builder()
-                    .name("mc_ticking_tile_entities")
-                    .help("Number of ticking tile entities per world")
-                    .labelNames("world")
-                    .register();
-        }
-        if (cfgWorldTime) {
-            worldTimeGauge = Gauge.builder()
-                    .name("mc_world_time")
-                    .help("In-game clock (0-24000); tracks day/night cycle")
-                    .labelNames("world")
-                    .register();
-        }
-        if (cfgWeather) {
-            worldStormGauge = Gauge.builder()
-                    .name("mc_world_storm")
-                    .help("1 if a storm is active, 0 otherwise")
-                    .labelNames("world")
-                    .register();
-            worldThunderingGauge = Gauge.builder()
-                    .name("mc_world_thundering")
-                    .help("1 if a thunderstorm is active, 0 otherwise")
-                    .labelNames("world")
-                    .register();
-        }
-    }
-
-    @Override
-    public void unregister() {
-        worldPlayersGauge        = clear(worldPlayersGauge);
-        loadedChunksGauge        = clear(loadedChunksGauge);
-        entitiesGauge            = clear(entitiesGauge);
-        entitiesByCategoryGauge  = clear(entitiesByCategoryGauge);
-        tileEntitiesGauge        = clear(tileEntitiesGauge);
-        tickingTileEntitiesGauge = clear(tickingTileEntitiesGauge);
-        worldTimeGauge           = clear(worldTimeGauge);
-        worldStormGauge          = clear(worldStormGauge);
-        worldThunderingGauge     = clear(worldThunderingGauge);
-    }
-
-    @Override
-    public void collect() {
-        if (worldPlayersGauge == null && loadedChunksGauge == null && entitiesGauge == null
-                && entitiesByCategoryGauge == null && tileEntitiesGauge == null
-                && tickingTileEntitiesGauge == null && worldTimeGauge == null
-                && worldStormGauge == null && worldThunderingGauge == null) return;
-
-        if (worldPlayersGauge        != null) worldPlayersGauge.clear();
-        if (loadedChunksGauge        != null) loadedChunksGauge.clear();
-        if (entitiesGauge            != null) entitiesGauge.clear();
-        if (entitiesByCategoryGauge  != null) entitiesByCategoryGauge.clear();
-        if (tileEntitiesGauge        != null) tileEntitiesGauge.clear();
-        if (tickingTileEntitiesGauge != null) tickingTileEntitiesGauge.clear();
-        if (worldTimeGauge           != null) worldTimeGauge.clear();
-        if (worldStormGauge          != null) worldStormGauge.clear();
-        if (worldThunderingGauge     != null) worldThunderingGauge.clear();
-
-        for (World world : Bukkit.getWorlds()) {
-            String name = world.getName();
-            if (worldPlayersGauge        != null) worldPlayersGauge.labelValues(name).set(world.getPlayerCount());
-            if (loadedChunksGauge        != null) loadedChunksGauge.labelValues(name).set(world.getChunkCount());
-            if (entitiesGauge            != null) entitiesGauge.labelValues(name).set(world.getEntityCount());
-            if (tileEntitiesGauge        != null) tileEntitiesGauge.labelValues(name).set(world.getTileEntityCount());
-            if (tickingTileEntitiesGauge != null) tickingTileEntitiesGauge.labelValues(name).set(world.getTickableTileEntityCount());
-            if (worldTimeGauge           != null) worldTimeGauge.labelValues(name).set(world.getTime());
-            if (worldStormGauge          != null) worldStormGauge.labelValues(name).set(world.hasStorm() ? 1 : 0);
-            if (worldThunderingGauge     != null) worldThunderingGauge.labelValues(name).set(world.isThundering() ? 1 : 0);
-
-            if (entitiesByCategoryGauge != null) {
+    private static final List<GaugeCollector> COLLECTORS = List.of(
+        new GaugeCollector("entities_by_category", "mc_entities_by_category",
+                "Entity count broken down by category per world",
+                List.of("world", "category"), g -> {
+            for (World world : Bukkit.getWorlds()) {
                 int monsters = 0, animals = 0, waterCreatures = 0, ambient = 0, misc = 0;
                 for (Entity entity : world.getEntities()) {
                     if      (entity instanceof Monster)  monsters++;
@@ -153,17 +37,24 @@ public class WorldMetrics implements MetricGroup {
                     else if (entity instanceof Ambient)  ambient++;
                     else                                 misc++;
                 }
-                entitiesByCategoryGauge.labelValues(name, "monsters").set(monsters);
-                entitiesByCategoryGauge.labelValues(name, "animals").set(animals);
-                entitiesByCategoryGauge.labelValues(name, "water_creatures").set(waterCreatures);
-                entitiesByCategoryGauge.labelValues(name, "ambient").set(ambient);
-                entitiesByCategoryGauge.labelValues(name, "misc").set(misc);
+                String name = world.getName();
+                g.labelValues(name, "monsters").set(monsters);
+                g.labelValues(name, "animals").set(animals);
+                g.labelValues(name, "water_creatures").set(waterCreatures);
+                g.labelValues(name, "ambient").set(ambient);
+                g.labelValues(name, "misc").set(misc);
             }
-        }
+        })
+    );
+
+    public WorldMetrics(FileConfiguration cfg) {
+        super(cfg);
     }
 
-    private static Gauge clear(Gauge g) {
-        if (g != null) PrometheusRegistry.defaultRegistry.unregister(g);
-        return null;
-    }
+    @Override protected String configRoot()                  { return "world_metrics"; }
+    @Override protected Iterable<? extends World> subjects() { return Bukkit.getWorlds(); }
+    @Override protected String labelName()                   { return "world"; }
+    @Override protected String labelValue(World w)           { return w.getName(); }
+    @Override protected List<Desc<World>> descriptions()     { return DESCRIPTIONS; }
+    @Override protected List<GaugeCollector> collectors()    { return COLLECTORS; }
 }

@@ -3,28 +3,26 @@ package org.rainbowhunter.prometheusexporter.metrics;
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics;
 import org.bukkit.configuration.file.FileConfiguration;
 
-public class JvmMetricsGroup implements MetricGroup {
+import java.util.Collections;
+import java.util.List;
 
-    private final boolean enabled;
+public class JvmMetricsGroup extends MetricGroup<Void> {
 
     public JvmMetricsGroup(FileConfiguration cfg) {
-        enabled = cfg.getBoolean("jvm_metrics.enabled", true);
+        super(cfg);
     }
 
+    @Override protected String configRoot()             { return "jvm_metrics"; }
+    @Override protected Iterable<Void> subjects()       { return Collections.emptyList(); }
+    @Override protected String labelName()              { return null; }
+    @Override protected String labelValue(Void subject) { return null; }
+    @Override protected List<Desc<Void>> descriptions() { return List.of(); }
+
     @Override
-    public void register() {
-        if (!enabled) return;
+    protected void extraRegister() {
         JvmMetrics.builder().register();
     }
 
-    @Override
-    public void unregister() {
-        // JvmMetrics registers collectors on the default registry with no clean unregister path;
-        // reload() leaves them in place (matches the caveat documented in PECommands.java).
-    }
-
-    @Override
-    public void collect() {
-        // JvmMetrics collectors push data themselves; nothing to do here.
-    }
+    // JvmMetrics registers collectors on the default registry with no clean unregister path;
+    // reload() leaves them in place (matches the caveat documented in PECommands.java).
 }
