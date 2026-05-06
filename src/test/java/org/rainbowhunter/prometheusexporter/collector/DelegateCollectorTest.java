@@ -8,6 +8,7 @@ import org.rainbowhunter.prometheusexporter.PrometheusRegistryCleanup;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(PrometheusRegistryCleanup.class)
 class DelegateCollectorTest {
@@ -35,5 +36,35 @@ class DelegateCollectorTest {
         dc.register(cfg, "x");
 
         assertThat(calls).hasValue(0);
+    }
+
+    @Test
+    void repeatedCollectorsWithSameKeyRegisterDelegateOnlyOnce() {
+        AtomicInteger calls = new AtomicInteger();
+
+        new DelegateCollector("shared_jvm_test", calls::incrementAndGet)
+                .register(new YamlConfiguration(), "x");
+        new DelegateCollector("shared_jvm_test", calls::incrementAndGet)
+                .register(new YamlConfiguration(), "x");
+
+        assertThat(calls).hasValue(1);
+    }
+
+    @Test
+    void failedRegistrationCanBeRetried() {
+        AtomicInteger calls = new AtomicInteger();
+        Runnable register = () -> {
+            if (calls.incrementAndGet() == 1) {
+                throw new IllegalStateException("boom");
+            }
+        };
+
+        assertThatThrownBy(() -> new DelegateCollector("retry_jvm_test", register)
+                .register(new YamlConfiguration(), "x"))
+                .isInstanceOf(IllegalStateException.class);
+        new DelegateCollector("retry_jvm_test", register)
+                .register(new YamlConfiguration(), "x");
+
+        assertThat(calls).hasValue(2);
     }
 }

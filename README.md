@@ -45,30 +45,29 @@ scrape_configs:
 
 ### Server
 
-| Metric                          | Labels                       | Description                                          |
-| ------------------------------- | ---------------------------- | ---------------------------------------------------- |
-| `mc_tps`                        | `window` (`1m`, `5m`, `15m`) | Server ticks per second                              |
-| `mc_mspt_milliseconds`          | —                            | Average milliseconds per tick (last 100 ticks)       |
-| `mc_tick_time_max_milliseconds` | —                            | Max tick duration among the last 100 ticks           |
-| `mc_tick_time_p95_milliseconds` | —                            | 95th-percentile tick duration among the last 100 ticks |
-| `mc_players_online`             | —                            | Current online player count                          |
-| `mc_players_max`                | —                            | Maximum player slots                                 |
-| `mc_current_tick`               | —                            | Monotonically increasing tick counter                |
-| `mc_worlds`                     | —                            | Number of currently loaded worlds                    |
+| Metric                      | Labels                         | Description                                         |
+| --------------------------- | ------------------------------ | --------------------------------------------------- |
+| `mc_tps`                    | `window` (`1m`, `5m`, `15m`)   | Server ticks per second                             |
+| `mc_mspt_milliseconds`      | —                              | Average milliseconds per tick (last 100 ticks)      |
+| `mc_tick_time_milliseconds` | `quantile` (`max`, `p95`)      | Tick duration quantiles over the last 100 ticks     |
+| `mc_players_online`         | —                              | Current online player count                         |
+| `mc_players_max`            | —                              | Maximum player slots                                |
+| `mc_current_tick`           | —                              | Monotonically increasing tick counter               |
+| `mc_worlds`                 | —                              | Number of currently loaded worlds                   |
 
 ### Per-world
 
-| Metric                       | Labels          | Description                                              |
-| ---------------------------- | --------------- | -------------------------------------------------------- |
-| `mc_world_players`           | `world`         | Players per world                                        |
-| `mc_loaded_chunks`           | `world`         | Loaded chunks per world                                  |
-| `mc_entities`                | `world`         | Total entity count per world                             |
-| `mc_entities_by_type`        | `world`, `type` | Entity count broken down by type (e.g. `zombie`, `cow`) per world |
-| `mc_tile_entities`           | `world`         | Tile entity count per world                              |
-| `mc_ticking_tile_entities`   | `world`         | Ticking tile entity count per world                      |
-| `mc_world_time`              | `world`         | In-game clock (0–24000); tracks day/night cycle          |
-| `mc_world_storm`             | `world`         | 1 if a storm is active, 0 otherwise                      |
-| `mc_world_thundering`        | `world`         | 1 if a thunderstorm is active, 0 otherwise               |
+| Metric                           | Labels          | Description                                              |
+| -------------------------------- | --------------- | -------------------------------------------------------- |
+| `mc_world_players`               | `world`         | Players per world                                        |
+| `mc_world_loaded_chunks`         | `world`         | Loaded chunks per world                                  |
+| `mc_world_entities`              | `world`         | Total entity count per world                             |
+| `mc_world_entities_by_type`      | `world`, `type` | Entity count broken down by type (e.g. `zombie`, `cow`) per world |
+| `mc_world_tile_entities`         | `world`         | Tile entity count per world                              |
+| `mc_world_ticking_tile_entities` | `world`         | Ticking tile entity count per world                      |
+| `mc_world_time`                  | `world`         | In-game clock (0–24000); tracks day/night cycle          |
+| `mc_world_storm`                 | `world`         | 1 if a storm is active, 0 otherwise                      |
+| `mc_world_thundering`            | `world`         | 1 if a thunderstorm is active, 0 otherwise               |
 
 ### Per-player
 
@@ -83,7 +82,7 @@ scrape_configs:
 | `mc_player_xp_progress`       | `player`         | Fractional XP progress within current level (0.0–1.0) |
 | `mc_player_total_experience`  | `player`         | Total accumulated XP per player                |
 | `mc_player_flying`            | `player`         | 1 if the player is flying, 0 otherwise         |
-| `mc_player_gamemode`          | `player`, `gamemode` | Active gamemode (1 = active, 0 = inactive) |
+| `mc_player_gamemode`          | `player`         | Numeric active gamemode (0 = survival, 1 = creative, 2 = adventure, 3 = spectator) |
 
 ### JVM
 
@@ -132,8 +131,8 @@ mc_players_online 4
 mc_player_ping_milliseconds{player="hank"} 42
 mc_player_ping_milliseconds{player="alice"} 78
 
-mc_loaded_chunks{world="world"} 441
-mc_loaded_chunks{world="world_nether"} 132
+mc_world_loaded_chunks{world="world"} 441
+mc_world_loaded_chunks{world="world_nether"} 132
 ```
 
 `MultiLabelGauge` — arbitrary rows, multiple labels. Two shapes fit:
@@ -149,9 +148,9 @@ mc_tps{window="15m"} 19.95
 *Cross-product across multiple dimensions* — e.g. entity counts broken down by `world` × `type`. `LabeledGauge` only supports one label, so anything with ≥2 dimensions goes here:
 
 ```
-mc_entities_by_type{world="world",type="zombie"} 87
-mc_entities_by_type{world="world",type="cow"} 23
-mc_entities_by_type{world="world_nether",type="piglin"} 12
+mc_world_entities_by_type{world="world",type="zombie"} 87
+mc_world_entities_by_type{world="world",type="cow"} 23
+mc_world_entities_by_type{world="world_nether",type="piglin"} 12
 ```
 
 Mental model: `SimpleGauge` is one number, `LabeledGauge` is `{subject -> number}`, `MultiLabelGauge` is a table with multiple key columns `{(k1, k2, ...) -> number}`.
