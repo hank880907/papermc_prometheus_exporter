@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.rainbowhunter"
-version = "1.0.0"
+version = (project.findProperty("pluginVersion") as String?) ?: "dev"
 
 java {
     toolchain {
@@ -63,8 +63,22 @@ tasks.register<Test>("integrationTest") {
     systemProperty("pe.paper.cache.dir", layout.buildDirectory.dir("paper-cache").get().asFile.absolutePath)
 }
 
+tasks.processResources {
+    val props = mapOf("version" to version)
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching("paper-plugin.yml") {
+        expand(props)
+    }
+}
+
+tasks.jar {
+    enabled = false
+}
+
 tasks.shadowJar {
     archiveClassifier.set("")
+    archiveFileName.set("PrometheusExporter-${version}.jar")
     relocate("io.prometheus", "org.rainbowhunter.prometheusexporter.shaded.prometheus")
 }
 
