@@ -17,6 +17,10 @@ public class ServerMetrics extends MetricGroup {
         super(cfg);
     }
 
+    public ServerMetrics(FileConfiguration cfg, String prefix) {
+        super(cfg, prefix);
+    }
+
     @Override protected String configRoot() { return "server_metrics"; }
 
     @Override protected List<MetricCollector> metrics() {

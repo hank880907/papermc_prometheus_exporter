@@ -20,7 +20,7 @@ public abstract class MetricGroup {
 
     protected MetricGroup(FileConfiguration cfg, String prefix) {
         this.cfg = cfg;
-        this.prefix = prefix;
+        this.prefix = prefix != null ? prefix : "mc_";
     }
 
     protected MetricGroup(FileConfiguration cfg) {

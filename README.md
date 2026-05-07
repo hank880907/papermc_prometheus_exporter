@@ -12,8 +12,9 @@ A PaperMC plugin that exposes server metrics to Prometheus via an HTTP endpoint.
 `plugins/PrometheusExporter/config.yml`:
 
 ```yaml
-metrics-port: 9940
-collection-interval-ticks: 20
+metrics_port: 9940
+collection_interval_ticks: 20
+metric_prefix: "mc_"
 
 server_metrics:
   enabled: true
@@ -56,6 +57,9 @@ player_metrics:
 jvm_metrics:
   enabled: true
 ```
+
+`metric_prefix` is applied to the plugin's Minecraft metrics. JVM metrics come from the Prometheus JVM collector and
+keep their `jvm_` names.
 
 ## Scraping
 

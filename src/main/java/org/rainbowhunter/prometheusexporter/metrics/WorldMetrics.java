@@ -19,6 +19,10 @@ public class WorldMetrics extends MetricGroup {
         super(cfg);
     }
 
+    public WorldMetrics(FileConfiguration cfg, String prefix) {
+        super(cfg, prefix);
+    }
+
     @Override protected String configRoot() { return "world_metrics"; }
 
     @Override protected List<MetricCollector> metrics() {

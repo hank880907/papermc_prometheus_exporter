@@ -27,7 +27,7 @@ public class PrometheusExporterPlugin extends JavaPlugin {
         buildGroups();
         groups.forEach(MetricGroup::register);
 
-        int port = getConfig().getInt("metrics-port", 9940);
+        int port = getConfig().getInt("metrics_port", 9940);
         try {
             httpServer = HTTPServer.builder().port(port).buildAndStart();
             getLogger().info("Prometheus metrics available on port " + port);
@@ -62,7 +62,7 @@ public class PrometheusExporterPlugin extends JavaPlugin {
     }
 
     private void startCollectionTask() {
-        long intervalTicks = getConfig().getLong("collection-interval-ticks", 20L);
+        long intervalTicks = getConfig().getLong("collection_interval_ticks", 20L);
         collectionTask = getServer().getScheduler()
                 .runTaskTimer(this, this::collectMetrics, 0L, intervalTicks);
     }
@@ -77,9 +77,10 @@ public class PrometheusExporterPlugin extends JavaPlugin {
     private void buildGroups() {
         groups.clear();
         FileConfiguration cfg = getConfig();
-        groups.add(new ServerMetrics(cfg));
-        groups.add(new WorldMetrics(cfg));
-        groups.add(new PlayerMetrics(cfg));
+        String prefix = cfg.getString("metric_prefix", "mc_");
+        groups.add(new ServerMetrics(cfg, prefix));
+        groups.add(new WorldMetrics(cfg, prefix));
+        groups.add(new PlayerMetrics(cfg, prefix));
         groups.add(new JvmMetrics(cfg));
     }
 

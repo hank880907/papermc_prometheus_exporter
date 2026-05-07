@@ -1,5 +1,6 @@
-metrics-port: 9940
-collection-interval-ticks: 20
+metrics_port: 9940
+collection_interval_ticks: 20
+metric_prefix: "mc_"
 
 server_metrics:
   enabled: true

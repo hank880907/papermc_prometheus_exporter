@@ -16,6 +16,10 @@ public class PlayerMetrics extends MetricGroup {
         super(cfg);
     }
 
+    public PlayerMetrics(FileConfiguration cfg, String prefix) {
+        super(cfg, prefix);
+    }
+
     @Override protected String configRoot() { return "player_metrics"; }
 
     @Override protected List<MetricCollector> metrics() {
