@@ -1,0 +1,36 @@
+services:
+  papermc:
+    image: marctv/minecraft-papermc-server:26.1.2
+    container_name: "papermc"  
+    environment:
+      MEMORYSIZE: "8G"
+      PAPERMC_FLAGS: ""
+    volumes:
+      - ./data:/data
+    ports:
+      - "25564:25565"  # minecraft server
+      - "9940:9940"    # Prometheus exporter
+    userns_mode: keep-id
+    stdin_open: true
+    tty: true
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    userns_mode: keep-id
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    userns_mode: keep-id
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+      - ./grafana_provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana_provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro

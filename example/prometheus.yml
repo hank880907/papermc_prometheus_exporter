@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 10s # How often to pull data
+
+scrape_configs:
+  - job_name: 'papermc'
+    static_configs:
+      - targets: ['papermc:9940']
+        labels:
+          server_name: 'survival'
